@@ -1,0 +1,11 @@
+{
+  "name": "node-starter",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "framer-motion": "^12.19.1",
+    "recharts": "^3.0.0"
+  }
+}
