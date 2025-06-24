@@ -27,7 +27,7 @@ const axes = [
 const questionTemplates = {
   "Storytelling": [
     "How important is character-driven storytelling to you?",
-    "Do you prefer long narrative arcs or short-term goals?",
+    "Do you prefer long narrative arcs?",
     "Do you enjoy character backstories influencing present events?"
   ],
   "Roleplay Immersion": [
