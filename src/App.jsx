@@ -99,14 +99,26 @@ const questions = Object.entries(questionTemplates).flatMap(([axis, items], i) =
   }))
 );
 
-const encodeAnswers = (answers) => btoa(JSON.stringify(answers));
+const encodeAnswers = (answers) => {
+  const scores = answers.map(a => a.score); // scores should be 0–5
+  const bytes = new Uint8Array(scores);
+  return btoa(String.fromCharCode(...bytes));
+};
+
 const decodeAnswers = (str) => {
   try {
-    return JSON.parse(atob(str));
+    if (!str) return null; // <- Prevent empty strings from decoding
+    const bytes = atob(str).split("").map(c => c.charCodeAt(0));
+    if (bytes.length !== questions.length) return null; // <- Check if length is correct
+    return questions.map((q, i) => ({
+      axis: q.axis,
+      score: bytes[i]
+    }));
   } catch {
     return null;
   }
 };
+
 
 const analyzeResults = (answers) => {
   const grouped = {};
@@ -119,7 +131,7 @@ const analyzeResults = (answers) => {
       let value = 0;
       if (desired > 2 && available > 2) value = 5;
       else if (desired > 2 && available <= 2) value = 2;
-      else if (desired <= 2) value = 1;
+      else if (desired <= 2) value = 0;
       return { axis, value };
     }
     const avg = grouped[axis].reduce((a, b) => a + b, 0) / (grouped[axis].length || 1);
@@ -141,7 +153,7 @@ export default function App() {
     if (!waveMode) return;
     const interval = setInterval(() => {
       setWaveFrame(f => f + 1);
-    }, 200);
+    }, 100);
     return () => clearInterval(interval);
   }, [waveMode]);
 
@@ -149,18 +161,18 @@ export default function App() {
   const progressPercent = Math.round((currentQuestion / totalQuestions) * 100);
 
   const startQuiz = () => {
-    const imported = decodeAnswers(importString);
-    if (imported && Array.isArray(imported)) {
-      setProfile(analyzeResults(imported));
-    } else {
-      setCurrentQuestion(0);
-    }
-  };
+  const imported = decodeAnswers(importString);
+  if (imported && Array.isArray(imported) && imported.length === questions.length) {
+    setProfile(analyzeResults(imported));
+  } else {
+    setCurrentQuestion(0);
+  }
+};
 
 const handleAnswer = (score) => {
   const question = questions[currentQuestion];
   const newAnswers = [...answers];
-  newAnswers[currentQuestion] = { axis: question.axis, score: score + 1 };
+  newAnswers[currentQuestion] = { axis: question.axis, score };
   setAnswers(newAnswers);
   if (currentQuestion + 1 < totalQuestions) {
     setCurrentQuestion(currentQuestion + 1);
@@ -246,7 +258,24 @@ const handleAnswer = (score) => {
             <button className="px-4 py-2 rounded bg-gray-600 text-white hover:bg-gray-700" onClick={() => setShowDebug(!showDebug)}>
               Debug
             </button>
-          </div>
+          <button
+			className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+			onClick={() => {
+			if (window.confirm("Are you sure you want to restart? All progress will be lost.")) {
+			setCurrentQuestion(-1);
+			setAnswers([]);
+			setProfile(null);
+			setImportString("");
+			setWaveMode(false);
+			setWaveFrame(0);
+			setShowDebug(false);
+			setName("");
+					}
+			}}
+			>
+			Restart
+			</button>
+		</div>
           {showDebug && (
             <div className="mt-4 text-left text-sm">
               <table className="table-auto border-collapse border w-full">
