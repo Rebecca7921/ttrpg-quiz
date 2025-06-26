@@ -1,11 +1,19 @@
 {
-  "name": "node-starter",
-  "private": true,
+  "name": "ttrpg-quiz",
+  "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "framer-motion": "^12.19.1",
-    "recharts": "^3.0.0"
+    "framer-motion": "^10.16.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^5.0.0"
   }
 }
