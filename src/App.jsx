@@ -21,6 +21,7 @@ const defaultOptions = ["Very rarely", "Rarely", "Sometimes", "Often", "Very oft
 const percentageOptions = ["0%", "1-24%", "25-49%", "50-74%", "75-100%"];
 const frequencyOptions = ["Never", "1/30 days", "1/14 days", "1/7 days", "More"];
 const frequency2Options = ["Never", "0-2 pr Campaign", "A quarter of sessions have one", "Every other session has one", "Every Session!"];
+const frequency3Options = ["Never", "Very little", "Some", "Much", "Very Much"];
 
 const questionTemplates = {
   "Storytelling": [
@@ -29,7 +30,7 @@ const questionTemplates = {
     { text: "How often do you want character backstories influencing present events?", options: defaultOptions }
   ],
   "Roleplay Immersion": [
-    { text: "How much do you want to immerse yourself in your character?", options: defaultOptions },
+    { text: "How much do you want to immerse yourself in your character?", options: frequency3Options },
     { text: "How often do you want to interact with other PCs in character?", options: defaultOptions },
     { text: "How often do you want others to interact with you in character?", options: defaultOptions }
   ],
@@ -65,7 +66,7 @@ const questionTemplates = {
   ],
   "Collaborative Play": [
     { text: "Do you want to build stories with other players?", options: defaultOptions },
-    { text: "How often do you find your characters set aside greed in favour of the greater good?", options: defaultOptions },
+    { text: "How often do you find your characters set aside greed in favour of benefit to the group?", options: defaultOptions },
     { text: "Are party dynamics and cohesion important to the characters you make??", options: defaultOptions }
   ],
   "Improvisation": [
@@ -81,7 +82,7 @@ const questionTemplates = {
   "Game Mechanics Focus": [
     { text: "Do you optimize builds for effectiveness more or equally to your peers?", options: defaultOptions },
     { text: "How important is it to you to learn and use every mechanic/rule?", options: percentageOptions },
-    { text: "What percentage of the time do you enjoy breaking down mechanics or min-maxing?", options: percentageOptions }
+    { text: "How often do you prioritize build effectiveness over character fluff?", options: defaultOptions }
   ],
 	"Play Potential": [
     { text: "How often do you currently play TTRPGs?", options: frequencyOptions },
@@ -128,12 +129,21 @@ const analyzeResults = (answers) => {
   return axes.map(axis => {
     if (axis === "Play Potential") {
       const [actual, desired, available] = grouped[axis];
-      let value = 0;
-      if (desired > 2 && available > 2) value = 5;
-      else if (desired > 2 && available <= 2) value = 2;
-      else if (desired <= 2) value = 0;
-      return { axis, value };
+
+      if (available <= 1) return { axis, value: 0 };
+
+      const low = x => x <= 1;
+      const medium = x => x === 2;
+      const high = x => x >= 3;
+
+      if (desired <= actual) return { axis, value: 1 };
+      if (low(actual) && high(desired)) return { axis, value: 5 };
+      if (low(actual) && medium(desired)) return { axis, value: 3 };
+      if (high(actual) && high(desired)) return { axis, value: 3 };
+
+      return { axis, value: 2 };
     }
+
     const avg = grouped[axis].reduce((a, b) => a + b, 0) / (grouped[axis].length || 1);
     return { axis, value: Math.round(avg) };
   });
